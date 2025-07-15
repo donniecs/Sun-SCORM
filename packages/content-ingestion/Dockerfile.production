@@ -1,0 +1,35 @@
+# Content Ingestion Production Dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY packages/content-ingestion/package*.json ./packages/content-ingestion/
+COPY packages/types/package*.json ./packages/types/
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
+COPY packages/content-ingestion/ ./packages/content-ingestion/
+COPY packages/types/ ./packages/types/
+
+# Change to service directory
+WORKDIR /app/packages/content-ingestion
+
+# Build the application
+RUN npm run build
+
+# Create non-root user and directories
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001 && \
+    mkdir -p /app/uploads
+
+# Change ownership
+RUN chown -R nodejs:nodejs /app
+USER nodejs
+
+EXPOSE 3002
+
+CMD ["npm", "start"]

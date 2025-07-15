@@ -1,0 +1,188 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid()) @map("id")
+  email     String   @unique @map("email")
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name") 
+  password  String   @map("password_hash")
+  tenantId  String   @map("tenant_id")
+  role      String   @default("learner") @map("role")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relationship to tenant
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // Relationship to courses
+  courses Course[]
+
+  // Relationship to registrations
+  registrations Registration[]
+
+  // Relationship to sequencing sessions
+  sequencingSessions SequencingSession[]
+  
+  // Relationship to xAPI statements
+  xapiStatements XAPIStatement[]
+
+  @@map("users")
+}
+
+model Course {
+  id         String   @id @default(cuid())
+  title      String
+  version    String
+  fileCount  Int
+  structure  String   // JSON stringified list of paths
+  ownerId    String
+  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relationship to registrations
+  registrations Registration[]
+
+  // Relationship to sequencing sessions
+  sequencingSessions SequencingSession[]
+  
+  // Relationship to xAPI statements
+  xapiStatements XAPIStatement[]
+
+  @@map("courses")
+}
+
+model Tenant {
+  id        String   @id @default(uuid()) @map("id")
+  name      String   @map("name")
+  domain    String   @unique @map("domain")
+  settings  Json     @default("{}") @map("settings")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relationship to users
+  users User[]
+
+  @@map("tenants")
+}
+
+/**
+ * CHANGE LOG - 2025-07-14 19:50
+ * =========================
+ * WHAT: Added Registration model for SCORM launch session tracking
+ * WHY: Phase 6 requirement for tracking course launches and progress
+ * IMPACT: Enables session management and future analytics
+ * NOTES FOR CHATGPT: This model tracks each time a user launches a course
+ * 
+ * CHANGE LOG - 2025-07-14 21:00 - PHASE 7
+ * ========================================
+ * WHAT: Added progressData JSON field to Registration model
+ * WHY: Phase 7 requirement for storing CMI data from SCORM API calls
+ * IMPACT: Enables persistent storage of detailed learning progress
+ * NOTES FOR CHATGPT: This field stores flexible CMI data like completion_status, score, session_time
+ */
+
+model Registration {
+  id               String    @id @default(cuid())
+  courseId         String
+  userId           String
+  startedAt        DateTime  @default(now())
+  completedAt      DateTime?
+  status           String    @default("pending") // pending | in-progress | completed | failed
+  progress         Float?    // 0.0 to 1.0
+  scoreRaw         Float?
+  scoreMax         Float?
+  scoreMin         Float?
+  completionStatus String?   // completed | incomplete | not_attempted | unknown
+  successStatus    String?   // passed | failed | unknown
+  progressData     Json?     // PHASE 7: Store CMI data from SCORM API
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // Relationships
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes for performance
+  @@index([courseId])
+  @@index([userId])
+  @@index([status])
+  @@index([courseId, userId])
+
+  @@map("registrations")
+}
+
+/**
+ * CHANGE LOG - 2025-07-15 - PHASE 9
+ * ==============================
+ * WHAT: Added SequencingSession model for SCORM 2004 sequencing state persistence
+ * WHY: Phase 9 requirement to persist sequencing sessions to database
+ * IMPACT: Enables persistent sequencing state, session recovery, and progress tracking
+ * NOTES FOR CHATGPT: This model stores complete sequencing state including activity tree and current navigation position
+ */
+model SequencingSession {
+  id                    String   @id @default(cuid())
+  userId                String
+  courseId              String
+  sessionEngineId       String   @unique // UUID from sequencing engine
+  activityTree          Json     // Complete activity tree structure
+  globalStateInfo       Json     // Global state information
+  currentActivity       String?  // Current activity ID
+  suspendedActivity     String?  // Suspended activity ID
+  activityStateTree     Json     // Complete activity state tree
+  sequencingControlFlow Json     // Sequencing control flow state
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relationships
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("sequencing_sessions")
+}
+
+/**
+ * CHANGE LOG - 2025-07-15 - PHASE 9
+ * ==============================
+ * WHAT: Added XAPIStatement model for storing xAPI statements
+ * WHY: Phase 9 requirement to persist xAPI statements from LRS service
+ * IMPACT: Enables xAPI analytics, statement queries, and learning record persistence
+ * NOTES FOR CHATGPT: This model stores complete xAPI statements with indexing for efficient queries
+ */
+model XAPIStatement {
+  id            String    @id @default(cuid())
+  statementId   String    @unique // UUID from xAPI statement
+  userId        String?   // Actor user ID if available
+  courseId      String?   // Related course ID if available
+  verb          String    // xAPI verb ID
+  objectId      String    // xAPI object ID
+  objectType    String    // xAPI object type
+  statement     Json      // Complete xAPI statement
+  stored        DateTime  @default(now())
+  authority     Json?     // xAPI authority information
+  version       String    @default("1.0.3")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  course Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  @@index([verb])
+  @@index([objectId])
+  @@index([userId])
+  @@index([courseId])
+  @@index([stored])
+  @@map("xapi_statements")
+}

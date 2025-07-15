@@ -1,0 +1,51 @@
+{
+  "name": "@rustici-killer/frontend",
+  "version": "0.1.0",
+  "description": "Frontend Application - Next.js developer/admin dashboard",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3007",
+    "build": "next build",
+    "start": "next start -p 3007",
+    "lint": "next lint",
+    "test": "jest",
+    "clean": "rm -rf .next out"
+  },
+  "dependencies": {
+    "next": "13.4.12",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "axios": "^1.4.0",
+    "tailwindcss": "^3.3.3",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.27",
+    "@headlessui/react": "^1.7.15",
+    "@heroicons/react": "^2.0.18",
+    "recharts": "^2.7.2",
+    "react-hook-form": "^7.45.2",
+    "date-fns": "^2.30.0",
+    "@tailwindcss/forms": "^0.5.4",
+    "@tailwindcss/typography": "^0.5.9"
+  },
+  "devDependencies": {
+    "@types/node": "^20.4.5",
+    "@types/react": "^18.2.17",
+    "@types/react-dom": "^18.2.7",
+    "eslint": "^8.45.0",
+    "eslint-config-next": "^13.4.12",
+    "typescript": "^5.1.6",
+    "jest": "^29.6.2",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/jest-dom": "^5.17.0"
+  },
+  "keywords": [
+    "next.js",
+    "react",
+    "dashboard",
+    "admin",
+    "scorm",
+    "e-learning"
+  ],
+  "author": "Rustici Killer Team",
+  "license": "MIT"
+}

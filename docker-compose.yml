@@ -1,0 +1,156 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: rustici-killer-postgres
+    environment:
+      POSTGRES_DB: rustici_prod
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: packages/api-gateway/Dockerfile.production
+    container_name: rustici-killer-api-gateway
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/rustici_prod
+      - JWT_SECRET=supersecureprodsecret
+      - CORS_ORIGINS=http://localhost:3006
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  content-ingestion:
+    build:
+      context: .
+      dockerfile: packages/content-ingestion/Dockerfile
+    container_name: rustici-killer-content-ingestion
+    ports:
+      - "3002:3002"
+    depends_on:
+      - postgres
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/rustici_prod
+      - UPLOAD_PATH=/app/uploads
+    volumes:
+      - ./uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  scorm-runtime:
+    build:
+      context: .
+      dockerfile: packages/scorm-runtime/Dockerfile
+    container_name: rustici-killer-scorm-runtime
+    ports:
+      - "3003:3003"
+    depends_on:
+      - postgres
+    environment:
+      - NODE_ENV=production
+      - PORT=3003
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/rustici_prod
+      - CORS_ORIGINS=http://localhost:3006
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  sequencing-engine:
+    build:
+      context: .
+      dockerfile: packages/sequencing-engine/Dockerfile
+    container_name: rustici-killer-sequencing-engine
+    ports:
+      - "3004:3004"
+    depends_on:
+      - postgres
+    environment:
+      - NODE_ENV=production
+      - PORT=3004
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/rustici_prod
+      - CORS_ORIGINS=http://localhost:3006
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  lrs-service:
+    build:
+      context: .
+      dockerfile: packages/lrs-service/Dockerfile
+    container_name: rustici-killer-lrs-service
+    ports:
+      - "3005:3005"
+    depends_on:
+      - postgres
+    environment:
+      - NODE_ENV=production
+      - PORT=3005
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/rustici_prod
+      - CORS_ORIGINS=http://localhost:3006
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    container_name: rustici-killer-frontend
+    ports:
+      - "3006:3006"
+    depends_on:
+      - api-gateway
+    environment:
+      - NODE_ENV=production
+      - PORT=3006
+      - NEXT_PUBLIC_API_URL=http://localhost:3000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: rustici-killer-network

@@ -1,0 +1,53 @@
+{
+  "name": "@rustici-killer/lrs-service",
+  "version": "0.1.0",
+  "description": "LRS Service - Handles xAPI statements and learning analytics",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "start": "node dist/src/index.js",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.11.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.8.1",
+    "helmet": "^7.0.0",
+    "joi": "^17.9.2",
+    "jsonwebtoken": "^9.0.1",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "pg": "^8.11.2",
+    "redis": "^4.6.7",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.17",
+    "@types/jest": "^29.5.3",
+    "@types/joi": "^17.2.3",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/lodash": "^4.14.195",
+    "@types/node": "^20.4.5",
+    "@types/pg": "^8.10.2",
+    "@types/uuid": "^9.0.8",
+    "jest": "^29.6.2",
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
+  },
+  "keywords": [
+    "xapi",
+    "lrs",
+    "learning-analytics",
+    "statements",
+    "scorm"
+  ],
+  "author": "Rustici Killer Team",
+  "license": "MIT"
+}

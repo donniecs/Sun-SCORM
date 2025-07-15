@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  firstName String
+  lastName  String
+  password  String
+  tenantId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationship to tenant
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // Relationship to courses
+  courses Course[]
+
+  // Relationship to registrations
+  registrations Registration[]
+
+  @@map("users")
+}
+
+model Course {
+  id         String   @id @default(cuid())
+  title      String
+  version    String
+  fileCount  Int
+  structure  String   // JSON stringified list of paths
+  ownerId    String
+  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relationship to registrations
+  registrations Registration[]
+
+  @@map("courses")
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationship to users
+  users User[]
+
+  @@map("tenants")
+}
+
+/**
+ * CHANGE LOG - 2025-07-14 19:50
+ * =========================
+ * WHAT: Added Registration model for SCORM launch session tracking
+ * WHY: Phase 6 requirement for tracking course launches and progress
+ * IMPACT: Enables session management and future analytics
+ * NOTES FOR CHATGPT: This model tracks each time a user launches a course
+ */
+
+model Registration {
+  id               String    @id @default(cuid())
+  courseId         String
+  userId           String
+  startedAt        DateTime  @default(now())
+  completedAt      DateTime?
+  status           String    @default("pending") // pending | in-progress | completed | failed
+  progress         Float?    // 0.0 to 1.0
+  scoreRaw         Float?
+  scoreMax         Float?
+  scoreMin         Float?
+  completionStatus String?   // completed | incomplete | not_attempted | unknown
+  successStatus    String?   // passed | failed | unknown
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // Relationships
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes for performance
+  @@index([courseId])
+  @@index([userId])
+  @@index([status])
+  @@index([courseId, userId])
+
+  @@map("registrations")
+}

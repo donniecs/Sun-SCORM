@@ -1,0 +1,64 @@
+# Robots.txt for Rustici Killer SCORM Platform
+# Staging Environment - Access Restricted
+
+# Disallow all crawlers from accessing the site
+User-agent: *
+Disallow: /
+
+# Specifically block common crawlers
+User-agent: Googlebot
+Disallow: /
+
+User-agent: Bingbot
+Disallow: /
+
+User-agent: Slurp
+Disallow: /
+
+User-agent: DuckDuckBot
+Disallow: /
+
+User-agent: Baiduspider
+Disallow: /
+
+User-agent: YandexBot
+Disallow: /
+
+User-agent: facebookexternalhit
+Disallow: /
+
+User-agent: Twitterbot
+Disallow: /
+
+User-agent: LinkedInBot
+Disallow: /
+
+# Block archiving services
+User-agent: ia_archiver
+Disallow: /
+
+User-agent: Wayback
+Disallow: /
+
+# Block SEO tools
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+# No sitemap provided (staging environment)
+# Sitemap: 
+
+# Crawl delay to discourage persistent crawlers
+Crawl-delay: 86400
+
+# Note: This is a staging environment
+# Production access controls should be implemented at the server level
+# This file provides an additional layer of protection against search engine indexing

@@ -1,0 +1,34 @@
+# Sequencing Engine Production Dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY packages/sequencing-engine/package*.json ./packages/sequencing-engine/
+COPY packages/types/package*.json ./packages/types/
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
+COPY packages/sequencing-engine/ ./packages/sequencing-engine/
+COPY packages/types/ ./packages/types/
+
+# Change to service directory
+WORKDIR /app/packages/sequencing-engine
+
+# Build the application
+RUN npm run build
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Change ownership
+RUN chown -R nodejs:nodejs /app
+USER nodejs
+
+EXPOSE 3004
+
+CMD ["npm", "start"]
