@@ -1,0 +1,62 @@
+{
+  "name": "@rustici-killer/analytics-pipeline",
+  "version": "1.0.0",
+  "description": "Analytics pipeline with Yet Analytics SQL LRS integration",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rimraf dist && tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "docker:build": "docker build -t analytics-pipeline .",
+    "docker:run": "docker run -p 8080:8080 analytics-pipeline",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix"
+  },
+  "keywords": [
+    "xapi",
+    "lrs",
+    "analytics",
+    "yet-analytics",
+    "sql-lrs",
+    "statement-forwarder"
+  ],
+  "author": "Sun SCORM Analytics Engine",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.11.0",
+    "uuid": "^9.0.0",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "morgan": "^1.10.0",
+    "winston": "^3.10.0",
+    "joi": "^17.9.0",
+    "dotenv": "^16.3.0",
+    "compression": "^1.7.4",
+    "rate-limiter-flexible": "^2.4.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/pg": "^8.10.2",
+    "@types/uuid": "^9.0.0",
+    "@types/cors": "^2.8.13",
+    "@types/helmet": "^4.0.0",
+    "@types/morgan": "^1.9.4",
+    "@types/compression": "^1.7.2",
+    "@types/node": "^20.4.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.0.0"
+  },
+  "files": [
+    "dist/",
+    "docker/",
+    "README.md",
+    "LICENSE"
+  ]
+}

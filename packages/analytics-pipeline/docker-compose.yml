@@ -1,0 +1,131 @@
+version: '3.8'
+
+services:
+  # Yet Analytics SQL LRS
+  # This implements the "Noisy-to-Transactional" pattern:
+  # - Accepts high-volume statement insertion (noisy)
+  # - Normalizes and transforms for efficient BI queries (transactional)
+  sql-lrs:
+    image: yetanalytics/lrsql:latest
+    container_name: sql-lrs
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Database Configuration
+      LRSQL_DB_TYPE: postgresql
+      LRSQL_DB_HOST: postgres
+      LRSQL_DB_PORT: 5432
+      LRSQL_DB_NAME: lrsql
+      LRSQL_DB_USER: lrsql
+      LRSQL_DB_PASSWORD: lrsql_password
+      
+      # LRS Configuration
+      LRSQL_ADMIN_USER_DEFAULT: admin
+      LRSQL_ADMIN_PASS_DEFAULT: admin_password
+      LRSQL_ENABLE_STATEMENT_HTML: "true"
+      LRSQL_ENABLE_ADMIN_STATUS: "true"
+      LRSQL_ENABLE_REACTIONS: "true"
+      
+      # Performance Tuning
+      LRSQL_POOL_INITIAL_SIZE: 5
+      LRSQL_POOL_MAX_SIZE: 20
+      LRSQL_POOL_MIN_IDLE: 2
+      LRSQL_POOL_MAX_IDLE: 10
+      
+      # Statement Batch Processing
+      LRSQL_STATEMENT_BATCH_SIZE: 100
+      LRSQL_STATEMENT_BATCH_TIMEOUT: 5000
+      
+      # Logging
+      LRSQL_LOG_LEVEL: INFO
+      
+    depends_on:
+      - postgres
+    volumes:
+      - lrs-data:/var/lib/lrsql
+    networks:
+      - analytics-network
+
+  # PostgreSQL Database for LRS
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres-lrs
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lrsql
+      POSTGRES_USER: lrsql
+      POSTGRES_PASSWORD: lrsql_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - analytics-network
+
+  # Statement Forwarder Service
+  statement-forwarder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: statement-forwarder
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      
+      # LRS Configuration
+      LRS_ENDPOINT: http://sql-lrs:8080/xapi
+      LRS_USERNAME: admin
+      LRS_PASSWORD: admin_password
+      
+      # Database Configuration
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: lrsql
+      DB_USER: lrsql
+      DB_PASSWORD: lrsql_password
+      
+      # JWT Configuration
+      JWT_SECRET: your-jwt-secret-here
+      
+      # Rate Limiting
+      RATE_LIMIT_WINDOW: 900000
+      RATE_LIMIT_MAX: 1000
+      
+      # Logging
+      LOG_LEVEL: info
+      
+    depends_on:
+      - sql-lrs
+      - postgres
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - analytics-network
+
+  # Redis for Rate Limiting and Caching
+  redis:
+    image: redis:7-alpine
+    container_name: redis-analytics
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - analytics-network
+
+volumes:
+  postgres-data:
+  lrs-data:
+  redis-data:
+
+networks:
+  analytics-network:
+    driver: bridge
