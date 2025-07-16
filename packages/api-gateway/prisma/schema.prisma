@@ -59,6 +59,9 @@ model Course {
   
   // Relationship to xAPI statements
   xapiStatements XAPIStatement[]
+  
+  // Relationship to dispatches
+  dispatches Dispatch[]
 
   @@map("courses")
 }
@@ -73,6 +76,9 @@ model Tenant {
 
   // Relationship to users
   users User[]
+  
+  // Relationship to dispatches
+  dispatches Dispatch[]
 
   @@map("tenants")
 }
@@ -185,4 +191,56 @@ model XAPIStatement {
   @@index([courseId])
   @@index([stored])
   @@map("xapi_statements")
+}
+
+/**
+ * CHANGE LOG - 2025-07-15 - PHASE 13B
+ * ====================================
+ * WHAT: Added Dispatch and DispatchUser models for SCORM course licensing system
+ * WHY: Phase 13B requirement to enable course licensing to external organizations
+ * IMPACT: Enables secure course distribution with usage limits, expiration, and tracking
+ * NOTES FOR CHATGPT: This system beats Rustici's dispatch by providing superior tracking and real-time analytics
+ */
+
+model Dispatch {
+  id            String   @id @default(uuid())
+  courseId      String
+  tenantId      String
+  mode          String   // 'capped' | 'unlimited' | 'time-bound'
+  maxUsers      Int?     // null for unlimited
+  expiresAt     DateTime?
+  allowAnalytics Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relationships
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users  DispatchUser[]
+
+  // Indexes for performance
+  @@index([courseId])
+  @@index([tenantId])
+  @@index([expiresAt])
+  @@map("dispatches")
+}
+
+model DispatchUser {
+  id          String   @id @default(uuid())
+  dispatchId  String
+  email       String?
+  launchToken String   @unique
+  launchedAt  DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  dispatch Dispatch @relation(fields: [dispatchId], references: [id], onDelete: Cascade)
+
+  // Indexes for performance
+  @@index([dispatchId])
+  @@index([launchToken])
+  @@index([launchedAt])
+  @@map("dispatch_users")
 }

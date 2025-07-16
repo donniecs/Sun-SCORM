@@ -4,9 +4,9 @@
   "description": "Frontend Application - Next.js developer/admin dashboard",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3007",
+    "dev": "next dev -p 3006",
     "build": "next build",
-    "start": "next start -p 3007",
+    "start": "next start -p 3006",
     "lint": "next lint",
     "test": "jest",
     "clean": "rm -rf .next out"

@@ -122,7 +122,7 @@ const getProgressBarClass = (completionRate: number): string => {
 const AdminOrganizationDashboard: NextPage = () => {
   const router = useRouter();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'courses' | 'analytics'>('overview');
+  const [activeTab, setActiveTab] = useState<'users' | 'courses' | 'tenants' | 'xapi' | 'meta'>('tenants');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -135,6 +135,26 @@ const AdminOrganizationDashboard: NextPage = () => {
   // Filtering
   const [userSearch, setUserSearch] = useState('');
   const [courseSearch, setCourseSearch] = useState('');
+
+  // Phase 15: Tenant Management State
+  const [showCreateTenantModal, setShowCreateTenantModal] = useState(false);
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [showAssignCourseModal, setShowAssignCourseModal] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState<any>(null);
+  const [createTenantForm, setCreateTenantForm] = useState({
+    name: '',
+    domain: ''
+  });
+  const [createUserForm, setCreateUserForm] = useState({
+    email: '',
+    firstName: '',
+    lastName: '',
+    password: '',
+    role: 'learner'
+  });
+  const [assignCourseForm, setAssignCourseForm] = useState({
+    courseId: ''
+  });
 
   useEffect(() => {
     if (!user) {
@@ -306,33 +326,121 @@ const AdminOrganizationDashboard: NextPage = () => {
 
       <div className={styles.tabs}>
         <button 
-          className={activeTab === 'overview' ? styles.tabActive : styles.tab}
-          onClick={() => setActiveTab('overview')}
+          className={activeTab === 'tenants' ? styles.tabActive : styles.tab}
+          onClick={() => setActiveTab('tenants')}
         >
-          Overview
+          🏢 Organizations ({tenants.length})
         </button>
         <button 
           className={activeTab === 'users' ? styles.tabActive : styles.tab}
           onClick={() => setActiveTab('users')}
         >
-          Users ({tenantMeta?.stats.users.total || 0})
+          👥 Users ({tenantMeta?.stats.users.total || 0})
         </button>
         <button 
           className={activeTab === 'courses' ? styles.tabActive : styles.tab}
           onClick={() => setActiveTab('courses')}
         >
-          Courses ({tenantMeta?.stats.courses.total || 0})
+          📚 Courses ({tenantMeta?.stats.courses.total || 0})
         </button>
         <button 
-          className={activeTab === 'analytics' ? styles.tabActive : styles.tab}
-          onClick={() => setActiveTab('analytics')}
+          className={activeTab === 'xapi' ? styles.tabActive : styles.tab}
+          onClick={() => setActiveTab('xapi')}
         >
-          Analytics
+          📊 Analytics
+        </button>
+        <button 
+          className={activeTab === 'meta' ? styles.tabActive : styles.tab}
+          onClick={() => setActiveTab('meta')}
+        >
+          ⚙️ Meta
         </button>
       </div>
 
       <div className={styles.content}>
-        {activeTab === 'overview' && tenantMeta && (
+        {activeTab === 'tenants' && (
+          <div className={styles.tenantsSection}>
+            <div className={styles.sectionHeader}>
+              <h2>🏢 Organization Management</h2>
+              <button 
+                onClick={() => setShowCreateTenantModal(true)}
+                className={styles.createButton}
+              >
+                ➕ Create Organization
+              </button>
+            </div>
+            <div className={styles.tableContainer}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Organization</th>
+                    <th>Domain</th>
+                    <th>Users</th>
+                    <th>Courses</th>
+                    <th>Dispatches</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tenants.map(tenant => (
+                    <tr key={tenant.id}>
+                      <td>
+                        <div className={styles.tenantInfo}>
+                          <strong>{tenant.name}</strong>
+                        </div>
+                      </td>
+                      <td>{tenant.domain}</td>
+                      <td>
+                        <span className={styles.userCount}>
+                          {tenant.stats.activeUsers}/{tenant.stats.totalUsers}
+                        </span>
+                      </td>
+                      <td>{tenant.stats.totalCourses}</td>
+                      <td>{tenant.stats.totalDispatches}</td>
+                      <td>{new Date(tenant.createdAt).toLocaleDateString()}</td>
+                      <td>
+                        <div className={styles.actionButtons}>
+                          <button 
+                            onClick={() => {
+                              setSelectedTenant(tenant);
+                              setShowCreateUserModal(true);
+                            }}
+                            className={styles.actionButton}
+                          >
+                            👤 Add User
+                          </button>
+                          <button 
+                            onClick={() => {
+                              setSelectedTenant(tenant);
+                              setShowAssignCourseModal(true);
+                            }}
+                            className={styles.actionButton}
+                          >
+                            📚 Assign Course
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {tenants.length === 0 && (
+                <div className={styles.emptyState}>
+                  <p>No organizations created yet.</p>
+                  <button 
+                    onClick={() => setShowCreateTenantModal(true)}
+                    className={styles.createButton}
+                  >
+                    ➕ Create First Organization
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'meta' && tenantMeta && (
           <div className={styles.overview}>
             <div className={styles.statsGrid}>
               <div className={styles.statCard}>
@@ -522,7 +630,7 @@ const AdminOrganizationDashboard: NextPage = () => {
           </div>
         )}
 
-        {activeTab === 'analytics' && xapiStats && (
+        {activeTab === 'xapi' && xapiStats && (
           <div className={styles.analyticsSection}>
             <h2>Learning Analytics</h2>
             <div className={styles.analyticsGrid}>
@@ -558,6 +666,143 @@ const AdminOrganizationDashboard: NextPage = () => {
           </div>
         )}
       </div>
+
+      {/* Phase 15: Create Tenant Modal */}
+      {showCreateTenantModal && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <h2>Create New Organization</h2>
+            <form onSubmit={handleCreateTenant}>
+              <div className={styles.formGroup}>
+                <label>Organization Name</label>
+                <input
+                  type="text"
+                  value={createTenantForm.name}
+                  onChange={(e) => setCreateTenantForm({...createTenantForm, name: e.target.value})}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Domain</label>
+                <input
+                  type="text"
+                  value={createTenantForm.domain}
+                  onChange={(e) => setCreateTenantForm({...createTenantForm, domain: e.target.value})}
+                  placeholder="acme-corp.com"
+                  required
+                />
+              </div>
+              <div className={styles.modalActions}>
+                <button type="button" onClick={() => setShowCreateTenantModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit">Create Organization</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Phase 15: Create User Modal */}
+      {showCreateUserModal && selectedTenant && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <h2>Add User to {selectedTenant.name}</h2>
+            <form onSubmit={handleCreateUser}>
+              <div className={styles.formGroup}>
+                <label>Email</label>
+                <input
+                  type="email"
+                  value={createUserForm.email}
+                  onChange={(e) => setCreateUserForm({...createUserForm, email: e.target.value})}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>First Name</label>
+                <input
+                  type="text"
+                  value={createUserForm.firstName}
+                  onChange={(e) => setCreateUserForm({...createUserForm, firstName: e.target.value})}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Last Name</label>
+                <input
+                  type="text"
+                  value={createUserForm.lastName}
+                  onChange={(e) => setCreateUserForm({...createUserForm, lastName: e.target.value})}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Password</label>
+                <input
+                  type="password"
+                  value={createUserForm.password}
+                  onChange={(e) => setCreateUserForm({...createUserForm, password: e.target.value})}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Role</label>
+                <select
+                  value={createUserForm.role}
+                  onChange={(e) => setCreateUserForm({...createUserForm, role: e.target.value})}
+                >
+                  <option value="learner">Learner</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div className={styles.modalActions}>
+                <button type="button" onClick={() => {
+                  setShowCreateUserModal(false);
+                  setSelectedTenant(null);
+                }}>
+                  Cancel
+                </button>
+                <button type="submit">Add User</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Phase 15: Assign Course Modal */}
+      {showAssignCourseModal && selectedTenant && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <h2>Assign Course to {selectedTenant.name}</h2>
+            <form onSubmit={handleAssignCourse}>
+              <div className={styles.formGroup}>
+                <label>Course</label>
+                <select
+                  value={assignCourseForm.courseId}
+                  onChange={(e) => setAssignCourseForm({...assignCourseForm, courseId: e.target.value})}
+                  required
+                >
+                  <option value="">Select a course...</option>
+                  {courses.map(course => (
+                    <option key={course.id} value={course.id}>
+                      {course.title} (v{course.version})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.modalActions}>
+                <button type="button" onClick={() => {
+                  setShowAssignCourseModal(false);
+                  setSelectedTenant(null);
+                }}>
+                  Cancel
+                </button>
+                <button type="submit">Assign Course</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

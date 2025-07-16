@@ -329,11 +329,6 @@
   }
 }
 
-/* Smooth scrolling for anchor links */
-html {
-  scroll-behavior: smooth;
-}
-
 /* Highlight current section */
 .section:target {
   border-left: 4px solid #3498db;

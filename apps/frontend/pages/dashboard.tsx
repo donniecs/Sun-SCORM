@@ -40,9 +40,11 @@ const Dashboard: React.FC = () => {
       setCoursesLoading(true);
       setError(null);
 
+      const token = localStorage.getItem('authToken');
       const response = await fetch('/api/courses', {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
 

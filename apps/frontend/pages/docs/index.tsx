@@ -169,7 +169,7 @@ Body: course=[ZIP_FILE]`}</pre>
             </div>
 
             <div className={styles.apiEndpoint}>
-              <h4>POST /api/courses/{courseId}/launch</h4>
+              <h4>POST /api/courses/{"{courseId}"}/launch</h4>
               <p>Launch a course for a user</p>
               <pre>{`Authorization: Bearer YOUR_TOKEN
 

@@ -866,3 +866,67 @@ export interface CreateLaunchSessionResponse {
   launchUrl?: string;
   error?: string;
 }
+
+// =============================================================================
+// PHASE 15: TENANT MANAGEMENT TYPES
+// =============================================================================
+
+/**
+ * Organization/Tenant creation request
+ */
+export interface CreateTenantRequest {
+  name: string;
+  domain: string;
+}
+
+/**
+ * Organization/Tenant response with stats
+ */
+export interface TenantWithStats {
+  id: string;
+  name: string;
+  domain: string;
+  createdAt: Date;
+  updatedAt: Date;
+  stats: {
+    totalUsers: number;
+    activeUsers: number;
+    totalCourses: number;
+    totalDispatches: number;
+  };
+  users: Array<{
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    isActive: boolean;
+  }>;
+  recentDispatches: Array<{
+    id: string;
+    courseId: string;
+    course: {
+      id: string;
+      title: string;
+    };
+    users: Array<any>;
+  }>;
+}
+
+/**
+ * User creation request for tenant
+ */
+export interface CreateTenantUserRequest {
+  email: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+  role?: 'learner' | 'admin';
+}
+
+/**
+ * Course assignment request
+ */
+export interface AssignCourseRequest {
+  courseId: string;
+}
