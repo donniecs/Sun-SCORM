@@ -69,7 +69,6 @@
  */
 
 import express from 'express';
-import { createProxyMiddleware } from 'http-proxy-middleware';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -81,13 +80,12 @@ import {
   JWTPayload, 
   LoginRequest, 
   RegisterRequest, 
-  AuthResponse,
-  LaunchRequest,
-  LaunchResponse,
-  CreateLaunchSessionRequest,
-  CreateLaunchSessionResponse
+  AuthResponse
 } from '../../types/src/index';
 import { createDispatchZip } from './utils/createDispatchZip';
+// PHASE 1.5 CLEANUP: Import centralized error handling
+import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler';
+import dispatchRoutes from './routes/dispatches';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -2930,14 +2928,13 @@ app.get('/org/tenants/:id/courses', requireAuth, requireAdmin, async (req: expre
   }
 });
 
-app.use('*', (req: express.Request, res: express.Response) => {
-  res.status(404).json({
-    success: false,
-    error: {
-      code: 'NOT_FOUND',
-      message: 'API endpoint not found'
-    }
-  });
-});
+// PHASE 1.5 CLEANUP: Use centralized error handling
+app.use('/api/dispatches', dispatchRoutes);
+
+// 404 handler for unknown routes
+app.use(notFoundHandler);
+
+// Global error handler (must be last)
+app.use(globalErrorHandler);
 
 export { app };
