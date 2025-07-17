@@ -105,17 +105,45 @@ router.get('/',
       });
 
       // Calculate statistics for each dispatch
-      const dispatchesWithStats = dispatches.map(dispatch => ({
-        ...dispatch,
-        stats: {
-          totalUsers: dispatch.users.length,
-          usageRate: dispatch.maxUsers ? 
-            ((dispatch.users.length / dispatch.maxUsers) * 100).toFixed(1) + '%' : 
-            'Unlimited',
-          isExpired: dispatch.expiresAt ? new Date() > dispatch.expiresAt : false,
-          isAtCapacity: dispatch.maxUsers ? dispatch.users.length >= dispatch.maxUsers : false
+      const dispatchesWithStats = dispatches.map(dispatch => {
+        const launchedUsers = dispatch.users.filter(u => u.launchedAt).length;
+        const completedUsers = dispatch.users.filter(u => u.completedAt).length;
+        const totalUsers = dispatch.users.length;
+        
+        // Calculate usage rate
+        let usageRate = 'Unlimited';
+        if (dispatch.maxUsers) {
+          usageRate = ((totalUsers / dispatch.maxUsers) * 100).toFixed(1) + '%';
         }
-      }));
+        
+        // Calculate remaining statistics
+        const remainingUsers = dispatch.maxUsers ? Math.max(0, dispatch.maxUsers - totalUsers) : null;
+        const remainingDays = dispatch.expiresAt ? 
+          Math.max(0, Math.floor((new Date(dispatch.expiresAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 
+          null;
+        
+        // Calculate status
+        const isExpired = dispatch.expiresAt ? new Date() > dispatch.expiresAt : false;
+        const isAtCapacity = dispatch.maxUsers ? totalUsers >= dispatch.maxUsers : false;
+        
+        // Calculate completion rate
+        const completionRate = launchedUsers > 0 ? (completedUsers / launchedUsers) * 100 : 0;
+        
+        return {
+          ...dispatch,
+          stats: {
+            totalUsers,
+            launchedUsers,
+            completedUsers,
+            usageRate,
+            remainingUsers,
+            remainingDays,
+            isExpired,
+            isAtCapacity,
+            completionRate
+          }
+        };
+      });
 
       res.json({
         success: true,
@@ -243,6 +271,7 @@ router.get('/:id/export',
       // Generate dispatch package
       const zipOptions = {
         dispatchId: dispatch.id,
+        courseId: dispatch.courseId,
         courseTitle: dispatch.course.title,
         launchToken: 'temp-token', // This will be replaced with actual launch token generation
         platformUrl: process.env.FRONTEND_URL || 'http://localhost:3001'

@@ -47,7 +47,9 @@ interface Dispatch {
     totalUsers: number;
     launchedUsers: number;
     completedUsers: number;
+    usageRate: string;
     remainingUsers: number | null;
+    remainingDays: number | null;
     isExpired: boolean;
     isAtCapacity: boolean;
     completionRate?: number;
@@ -230,12 +232,62 @@ const AdminDispatchPage: React.FC = () => {
     }
   };
 
-  const handleExportDispatch = async (dispatchId: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Never';
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const getStatusText = (dispatch: Dispatch) => {
+    if (dispatch.stats.isExpired) return 'Expired';
+    if (dispatch.stats.isAtCapacity) return 'At Capacity';
+    return 'Active';
+  };
+
+  const getStatusColor = (dispatch: Dispatch) => {
+    if (dispatch.stats.isExpired) return '#dc3545'; // Red
+    if (dispatch.stats.isAtCapacity) return '#dc3545'; // Red
+    
+    // Calculate usage percentage for warning colors
+    if (dispatch.maxUsers) {
+      const usagePercentage = (dispatch.stats.totalUsers / dispatch.maxUsers) * 100;
+      if (usagePercentage >= 80) return '#ffc107'; // Yellow warning
+    }
+    
+    // Check expiration warning
+    if (dispatch.expiresAt) {
+      const daysRemaining = Math.floor((new Date(dispatch.expiresAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+      if (daysRemaining <= 7) return '#ffc107'; // Yellow warning
+    }
+    
+    return '#28a745'; // Green
+  };
+
+  const getRemainingDays = (expiresAt: string | null): number | null => {
+    if (!expiresAt) return null;
+    const remaining = Math.floor((new Date(expiresAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    return remaining > 0 ? remaining : 0;
+  };
+
+  const formatRemainingTime = (expiresAt: string | null): string => {
+    if (!expiresAt) return 'Never';
+    const remaining = getRemainingDays(expiresAt);
+    if (remaining === null) return 'Never';
+    if (remaining === 0) return 'Today';
+    if (remaining === 1) return '1 day';
+    if (remaining <= 7) return `${remaining} days`;
+    return formatDate(expiresAt);
+  };
+
+  const handleDownloadDispatch = async (dispatchId: string, courseTitle: string) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch(`/api/dispatch/${dispatchId}/export`, {
+      // Set loading state
+      setError(null);
+      
+      // Use the new download endpoint
+      const response = await fetch(`/api/v1/dispatches/${dispatchId}/download`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -243,21 +295,14 @@ const AdminDispatchPage: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to export dispatch');
+        throw new Error('Failed to download dispatch package');
       }
 
       // Get the ZIP file as a blob
       const blob = await response.blob();
       
-      // Extract filename from response headers or create a default one
-      const contentDisposition = response.headers.get('Content-Disposition');
-      let filename = 'dispatch_export.zip';
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
-        if (filenameMatch) {
-          filename = filenameMatch[1];
-        }
-      }
+      // Create a filename
+      const filename = `${courseTitle.replace(/[^a-zA-Z0-9]/g, '_')}_dispatch_${dispatchId.substring(0, 8)}.zip`;
 
       // Create download link
       const url = window.URL.createObjectURL(blob);
@@ -269,21 +314,10 @@ const AdminDispatchPage: React.FC = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      alert('Dispatch exported successfully! The ZIP file can be uploaded to any SCORM-compatible LMS.');
+      alert('Dispatch package downloaded successfully! Upload this ZIP file to your LMS to deploy the course.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to export dispatch');
+      setError(err instanceof Error ? err.message : 'Failed to download dispatch package');
     }
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const getStatusText = (dispatch: Dispatch) => {
-    if (dispatch.stats.isExpired) return 'Expired';
-    if (dispatch.stats.isAtCapacity) return 'At Capacity';
-    return 'Active';
   };
 
   const getUserStatus = (user: DispatchUser) => {
@@ -362,12 +396,16 @@ const AdminDispatchPage: React.FC = () => {
                       {dispatch.stats.totalUsers}
                       {dispatch.maxUsers && ` / ${dispatch.maxUsers}`}
                     </span>
+                    <span className={styles.usageRate}>
+                      {dispatch.stats.usageRate}
+                    </span>
                     {dispatch.maxUsers && (
                       <div className={styles.progressBar}>
                         <div 
                           className={styles.progressFill}
                           style={{ 
-                            width: `${(dispatch.stats.totalUsers / dispatch.maxUsers) * 100}%`
+                            width: `${(dispatch.stats.totalUsers / dispatch.maxUsers) * 100}%`,
+                            backgroundColor: getStatusColor(dispatch)
                           }}
                         />
                       </div>
@@ -387,31 +425,39 @@ const AdminDispatchPage: React.FC = () => {
                   </div>
                 </td>
                 <td>
-                  <span className={styles.statusBadge}>
+                  <span 
+                    className={styles.statusBadge}
+                    style={{ color: getStatusColor(dispatch) }}
+                  >
                     {getStatusText(dispatch)}
                   </span>
                 </td>
-                <td>{formatDate(dispatch.expiresAt)}</td>
+                <td>
+                  <span className={styles.expirationText}>
+                    {formatRemainingTime(dispatch.expiresAt)}
+                  </span>
+                </td>
                 <td>
                   <div className={styles.actions}>
                     <button 
                       className={styles.secondaryButton}
                       onClick={() => setSelectedDispatch(dispatch)}
                     >
-                      Manage
+                      📊 Manage
                     </button>
                     <button 
                       className={styles.primaryButton}
-                      onClick={() => handleExportDispatch(dispatch.id)}
-                      title="Export as LMS-compatible ZIP file"
+                      onClick={() => handleDownloadDispatch(dispatch.id, dispatch.course.title)}
+                      title="Download SCORM-compatible dispatch package"
                     >
-                      📦 Export ZIP
+                      📦 Download Dispatch
                     </button>
                     <button 
                       className={styles.dangerButton}
                       onClick={() => handleDeleteDispatch(dispatch.id)}
+                      title="Delete this dispatch"
                     >
-                      Delete
+                      🗑️ Delete
                     </button>
                   </div>
                 </td>

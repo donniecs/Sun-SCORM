@@ -81,7 +81,18 @@ export const schemas = {
   // Course assignment
   courseAssignment: Joi.object({
     courseId: Joi.string().uuid().required()
-  })
+  }),
+
+  // Dispatch launch (external LMS)
+  dispatchLaunch: Joi.object({
+    userAgent: Joi.string().max(500).optional(),
+    timestamp: Joi.string().isoDate().optional(),
+    learnerInfo: Joi.object({
+      id: Joi.string().max(100).optional(),
+      name: Joi.string().max(100).optional(),
+      email: Joi.string().email().optional()
+    }).optional()
+  }).options({ allowUnknown: true }) // Allow additional fields from LMS
 };
 
 /**

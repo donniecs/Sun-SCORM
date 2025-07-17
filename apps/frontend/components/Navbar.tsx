@@ -25,6 +25,12 @@ const Navbar: React.FC = () => {
                 >
                   Dashboard
                 </Link>
+                <Link 
+                  href="/courses/upload" 
+                  className="text-green-600 hover:text-green-700 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Upload Course
+                </Link>
                 {user.role === 'admin' && (
                   <div className="flex items-center space-x-1">
                     <Link 

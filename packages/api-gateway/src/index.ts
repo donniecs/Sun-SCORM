@@ -86,6 +86,8 @@ import { createDispatchZip } from './utils/createDispatchZip';
 // PHASE 1.5 CLEANUP: Import centralized error handling
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler';
 import dispatchRoutes from './routes/dispatches';
+import launchRoutes from './routes/launch';
+import downloadRoutes from './routes/download';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -293,7 +295,8 @@ app.post('/auth/register', async (req: express.Request, res: express.Response) =
           firstName,
           lastName,
           password: passwordHash,
-          tenantId: tenant.id
+          tenantId: tenant.id,
+          role: 'admin' // First user in tenant is admin
         }
       });
 
@@ -2527,6 +2530,7 @@ app.get('/dispatch/:id/export', requireAuth, requireAdmin, async (req: express.R
     // Create ZIP buffer
     const zipBuffer = await createDispatchZip({
       dispatchId: dispatch.id,
+      courseId: dispatch.courseId,
       courseTitle: dispatch.course.title,
       launchToken: dispatch.id, // Using dispatch ID as launch token for now
       platformUrl
@@ -2930,6 +2934,12 @@ app.get('/org/tenants/:id/courses', requireAuth, requireAdmin, async (req: expre
 
 // PHASE 1.5 CLEANUP: Use centralized error handling
 app.use('/api/dispatches', dispatchRoutes);
+
+// PHASE 3: Launch routes for external LMS integration
+app.use('/api/v1/dispatches', launchRoutes);
+
+// PHASE 3: Download routes for ZIP generation
+app.use('/api/v1/dispatches', downloadRoutes);
 
 // 404 handler for unknown routes
 app.use(notFoundHandler);

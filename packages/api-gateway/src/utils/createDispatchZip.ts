@@ -10,6 +10,7 @@ import archiver from 'archiver';
 
 interface DispatchZipOptions {
   dispatchId: string;
+  courseId: string;
   courseTitle: string;
   launchToken: string;
   platformUrl: string;
@@ -67,14 +68,16 @@ export function createManifest(courseTitle: string, launchToken: string, platfor
 }
 
 /**
- * Creates an HTML launcher that redirects to Sun-SCORM platform
+ * Creates an HTML launcher with embedded SCORM-to-xAPI wrapper
  * @param courseTitle - Title of the course
- * @param launchToken - Launch token for authentication
+ * @param dispatchId - Dispatch ID for tracking
+ * @param courseId - Course ID for tracking
  * @param platformUrl - Base URL of the Sun-SCORM platform
  * @returns HTML string for index.html
  */
-export function createLauncherHTML(courseTitle: string, launchToken: string, platformUrl: string): string {
-  const launchUrl = `${platformUrl}/launch/${launchToken}`;
+export function createLauncherHTML(courseTitle: string, dispatchId: string, courseId: string, platformUrl: string): string {
+  const launchUrl = `${platformUrl}/api/v1/dispatches/${dispatchId}/launch`;
+  const lrsEndpoint = `${platformUrl}/api/analytics/statements`;
   
   return `<!DOCTYPE html>
 <html lang="en">
@@ -170,6 +173,15 @@ export function createLauncherHTML(courseTitle: string, launchToken: string, pla
             margin-top: 20px;
             display: none;
         }
+        
+        .success {
+            background: #efe;
+            color: #363;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -179,12 +191,15 @@ export function createLauncherHTML(courseTitle: string, launchToken: string, pla
         <p class="subtitle">Powered by Sun-SCORM Platform</p>
         
         <div id="launch-section">
-            <a href="${launchUrl}" class="launch-button" onclick="launchCourse()">
+            <button class="launch-button" onclick="initializeCourse()">
                 🎯 Launch Course
-            </a>
+            </button>
             <div class="spinner" id="spinner"></div>
             <div class="error" id="error">
                 Failed to launch course. Please check your connection and try again.
+            </div>
+            <div class="success" id="success">
+                Course launched successfully! Loading content...
             </div>
         </div>
         
@@ -194,59 +209,206 @@ export function createLauncherHTML(courseTitle: string, launchToken: string, pla
         </div>
     </div>
 
+    <!-- Critical: Configuration must be injected BEFORE wrapper loads -->
     <script>
-        // SCORM API stubs for LMS compatibility
-        var API = {
+        // Sun-SCORM Configuration (injected dynamically)
+        const sunScormConfig = {
+            dispatchId: "${dispatchId}",
+            courseId: "${courseId}",
+            lrsEndpoint: "${lrsEndpoint}",
+            launchUrl: "${launchUrl}"
+        };
+        
+        // Make configuration available globally
+        window.sunScormConfig = sunScormConfig;
+        
+        // SCORM API Implementation with Sun-SCORM Integration
+        let scormInitialized = false;
+        let authToken = null;
+        
+        const API = {
             LMSInitialize: function(param) {
-                console.log("SCORM API: LMSInitialize called");
+                console.log("Sun-SCORM: LMSInitialize called");
+                scormInitialized = true;
                 return "true";
             },
+            
             LMSFinish: function(param) {
-                console.log("SCORM API: LMSFinish called");
+                console.log("Sun-SCORM: LMSFinish called");
+                scormInitialized = false;
                 return "true";
             },
-            LMSGetValue: function(name) {
-                console.log("SCORM API: LMSGetValue called with:", name);
-                if (name === "cmi.core.student_id") return "scorm_user";
-                if (name === "cmi.core.student_name") return "SCORM User";
-                return "";
+            
+            LMSGetValue: function(element) {
+                console.log("Sun-SCORM: LMSGetValue called with:", element);
+                
+                // Standard SCORM 1.2 elements
+                switch(element) {
+                    case 'cmi.core.student_id':
+                        return 'dispatch_user_' + sunScormConfig.dispatchId;
+                    case 'cmi.core.student_name':
+                        return 'Dispatch User';
+                    case 'cmi.core.lesson_location':
+                        return '';
+                    case 'cmi.core.lesson_status':
+                        return 'incomplete';
+                    case 'cmi.core.score.raw':
+                        return '';
+                    case 'cmi.core.score.max':
+                        return '';
+                    case 'cmi.core.score.min':
+                        return '';
+                    case 'cmi.core.total_time':
+                        return '0000:00:00';
+                    case 'cmi.core.entry':
+                        return 'ab-initio';
+                    case 'cmi.core.exit':
+                        return '';
+                    case 'cmi.suspend_data':
+                        return '';
+                    default:
+                        return '';
+                }
             },
-            LMSSetValue: function(name, value) {
-                console.log("SCORM API: LMSSetValue called with:", name, value);
+            
+            LMSSetValue: function(element, value) {
+                console.log("Sun-SCORM: LMSSetValue called with:", element, "=", value);
+                
+                // Send xAPI statements for critical interactions
+                if (element === 'cmi.core.lesson_status' && value === 'completed') {
+                    sendXAPIStatement('completed', { completion: true });
+                }
+                
+                if (element === 'cmi.core.score.raw' && value) {
+                    sendXAPIStatement('scored', { score: parseFloat(value) });
+                }
+                
                 return "true";
             },
+            
             LMSCommit: function(param) {
-                console.log("SCORM API: LMSCommit called");
+                console.log("Sun-SCORM: LMSCommit called");
                 return "true";
             },
+            
             LMSGetLastError: function() {
                 return "0";
             },
+            
             LMSGetErrorString: function(errorCode) {
                 return "No error";
             },
+            
             LMSGetDiagnostic: function(errorCode) {
                 return "No error";
             }
         };
         
-        // Make API available globally for SCORM content
+        // Make API available globally
         window.API = API;
         
-        function launchCourse() {
-            document.getElementById('spinner').style.display = 'block';
+        // xAPI Statement Sending
+        function sendXAPIStatement(verb, result) {
+            if (!authToken) {
+                console.log("Sun-SCORM: No auth token, skipping xAPI statement");
+                return;
+            }
             
-            // Auto-redirect after a short delay
-            setTimeout(function() {
-                window.location.href = '${launchUrl}';
-            }, 1000);
+            const statement = {
+                actor: {
+                    name: "Dispatch User",
+                    mbox: "mailto:dispatch@sunscorm.com"
+                },
+                verb: {
+                    id: "http://adlnet.gov/expapi/verbs/" + verb,
+                    display: { "en-US": verb }
+                },
+                object: {
+                    id: sunScormConfig.courseId,
+                    definition: {
+                        name: { "en-US": "${courseTitle}" }
+                    }
+                },
+                result: result || {},
+                context: {
+                    extensions: {
+                        "http://sunscorm.com/extensions/dispatch-id": sunScormConfig.dispatchId
+                    }
+                }
+            };
+            
+            fetch(sunScormConfig.lrsEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + authToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(statement)
+            }).catch(error => {
+                console.error("Sun-SCORM: Failed to send xAPI statement:", error);
+            });
         }
         
-        // Auto-launch after page loads
+        // Course initialization
+        async function initializeCourse() {
+            const spinner = document.getElementById('spinner');
+            const errorDiv = document.getElementById('error');
+            const successDiv = document.getElementById('success');
+            
+            spinner.style.display = 'block';
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            try {
+                // Request authorization from Sun-SCORM platform
+                const response = await fetch(sunScormConfig.launchUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        dispatchId: sunScormConfig.dispatchId,
+                        userAgent: navigator.userAgent,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.authToken;
+                    
+                    // Send launch xAPI statement
+                    sendXAPIStatement('launched', { 
+                        timestamp: new Date().toISOString() 
+                    });
+                    
+                    successDiv.style.display = 'block';
+                    
+                    // Initialize SCORM session
+                    API.LMSInitialize('');
+                    
+                    // Redirect to actual course content would go here
+                    console.log("Sun-SCORM: Course authorized and ready");
+                    
+                } else {
+                    throw new Error(data.error || 'Authorization failed');
+                }
+                
+            } catch (error) {
+                console.error("Sun-SCORM: Launch error:", error);
+                errorDiv.textContent = error.message || 'Failed to launch course';
+                errorDiv.style.display = 'block';
+            } finally {
+                spinner.style.display = 'none';
+            }
+        }
+        
+        // Auto-initialize on page load
         window.addEventListener('load', function() {
-            setTimeout(function() {
-                launchCourse();
-            }, 2000);
+            console.log("Sun-SCORM: Page loaded, configuration:", sunScormConfig);
+            // Auto-launch after 2 seconds
+            setTimeout(initializeCourse, 2000);
         });
     </script>
 </body>
@@ -327,7 +489,7 @@ if (typeof window !== 'undefined') {
  * @returns Promise<Buffer> - ZIP file buffer
  */
 export async function createDispatchZip(options: DispatchZipOptions): Promise<Buffer> {
-  const { dispatchId, courseTitle, launchToken, platformUrl } = options;
+  const { dispatchId, courseId, courseTitle, launchToken, platformUrl } = options;
   
   return new Promise((resolve, reject) => {
     const archive = archiver('zip', {
@@ -345,8 +507,8 @@ export async function createDispatchZip(options: DispatchZipOptions): Promise<Bu
     const manifest = createManifest(courseTitle, launchToken, platformUrl);
     archive.append(manifest, { name: 'imsmanifest.xml' });
     
-    // Add launcher HTML
-    const launcherHTML = createLauncherHTML(courseTitle, launchToken, platformUrl);
+    // Add launcher HTML with proper config injection
+    const launcherHTML = createLauncherHTML(courseTitle, dispatchId, courseId, platformUrl);
     archive.append(launcherHTML, { name: 'index.html' });
     
     // Add SCORM driver
@@ -359,6 +521,7 @@ export async function createDispatchZip(options: DispatchZipOptions): Promise<Bu
       platform: 'Sun-SCORM Enterprise',
       version: '1.0.0',
       dispatchId,
+      courseId,
       courseTitle,
       launchToken,
       type: 'lms-compatible-redirect'

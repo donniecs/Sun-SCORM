@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
-const API_GATEWAY_URL = process.env.API_GATEWAY_URL || 'http://localhost:3001';
+const API_GATEWAY_URL = process.env.API_GATEWAY_URL || 'http://localhost:3000';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         'Content-Type': 'application/json',
         'Authorization': headers.authorization || '',
       },
-      body: method !== 'GET' ? JSON.stringify(body) : undefined,
+      body: method !== 'GET' && body ? JSON.stringify(body) : undefined,
     });
 
     const data = await response.json();
