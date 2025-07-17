@@ -171,6 +171,18 @@ const AdminOrganizationDashboard: NextPage = () => {
     loadData();
   }, [user, router]);
 
+  /**
+  * Fetches and sets organization meta, users, courses, and xAPI data, managing loading and error states.
+  * @example
+  * sync()
+  * No return value
+  * @returns {void} No return value as it deals with application state updates directly.
+  * @description
+  *   - Redirects to login page if authentication token is absent.
+  *   - Makes concurrent API calls for efficiency.
+  *   - Handles fetch errors and updates error state accordingly.
+  *   - Involves asynchronous data fetching and state management.
+  */
   const loadData = async () => {
     try {
       setLoading(true);
@@ -221,6 +233,20 @@ const AdminOrganizationDashboard: NextPage = () => {
     }
   };
 
+  /**
+  * Updates the user's role in the organization.
+  * @example
+  * sync('12345', 'admin')
+  * undefined
+  * @param {string} userId - The id of the user whose role is being changed.
+  * @param {string} newRole - The new role to assign to the user.
+  * @returns {void} This function does not return a value.
+  * @description
+  *   - Requires that a valid authToken is stored in localStorage.
+  *   - Throws an error if the fetch request fails.
+  *   - Updates the local user state with the new role.
+  *   - Handles errors by updating the error state with a descriptive message.
+  */
   const handleUserRoleChange = async (userId: string, newRole: string) => {
     try {
       const token = localStorage.getItem('authToken');
@@ -249,6 +275,19 @@ const AdminOrganizationDashboard: NextPage = () => {
     }
   };
 
+  /**
+  * Deactivates a user based on userId and updates local state accordingly
+  * @example
+  * sync("12345")
+  * undefined
+  * @param {string} userId - The ID of the user to be deactivated.
+  * @returns {Promise<void>} This function does not return a value.
+  * @description
+  *   - Retrieves the authentication token from local storage and sends it in the request header.
+  *   - Makes a POST request to deactivate the user.
+  *   - Throws an error if the deactivation request fails.
+  *   - Updates the local state of users by setting the specified user's 'isActive' property to false.
+  */
   const handleUserDeactivate = async (userId: string) => {
     try {
       const token = localStorage.getItem('authToken');

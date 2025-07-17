@@ -10,6 +10,19 @@ import Head from 'next/head';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 
+/**
+ * Displays the main page with authentication logic and content for Rustici Killer.
+ * @example
+ * renderLoginPage()
+ * Displays loading screen if loading, dashboard if authenticated, or main page otherwise.
+ * @param {object} props - The properties passed to the page, including authentication status and loading state.
+ * @returns {JSX.Element} Renders the main page including header, navbar, main content, and footer.
+ * @description
+ *   - Utilizes useAuth hook for authentication status and useRouter for navigation.
+ *   - Automatically redirects authenticated users to the dashboard.
+ *   - Displays a loading spinner while the authentication status is being determined.
+ *   - Provides options for unauthenticated users to sign up or log in.
+ */
 const HomePage: React.FC = () => {
   const { user, loading } = useAuth();
   const router = useRouter();
