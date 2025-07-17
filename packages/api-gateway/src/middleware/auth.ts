@@ -10,7 +10,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../utils/database';
-import { JWTPayload } from '../../../types/src/index';
+import { JWTPayload } from '@rustici-killer/types';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 

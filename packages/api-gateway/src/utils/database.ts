@@ -13,9 +13,19 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { mockPrisma } from './mockDatabase';
 
-// Singleton Prisma instance
-const prisma = new PrismaClient();
+// Try to use real Prisma, fallback to mock
+let prisma: any;
+try {
+  prisma = new PrismaClient();
+} catch (error) {
+  console.warn('Prisma not available, using mock database for development');
+  prisma = mockPrisma;
+}
+
+// Export prisma instance for use in other modules
+export { prisma };
 
 /**
  * Course validation utilities

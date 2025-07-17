@@ -75,48 +75,38 @@ import rateLimit from 'express-rate-limit';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { PrismaClient } from '@prisma/client';
 import { 
   JWTPayload, 
   LoginRequest, 
   RegisterRequest, 
   AuthResponse
-} from '../../types/src/index';
+} from '@rustici-killer/types';
 import { createDispatchZip } from './utils/createDispatchZip';
 // PHASE 1.5 CLEANUP: Import centralized error handling
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler';
 import dispatchRoutes from './routes/dispatches';
 import launchRoutes from './routes/launch';
 import downloadRoutes from './routes/download';
+// Import database utility with mock fallback
+import { prisma } from './utils/database';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // =============================================================================
-// PRISMA CLIENT SETUP - PHASE 3: Database Integration
+// DATABASE CLIENT SETUP - PHASE 4: Database Integration with Mock Fallback
 // =============================================================================
 /**
- * CHANGE LOG - 2025-07-14 14:45
+ * CHANGE LOG - 2025-07-17 (Phase 4 Fix)
  * ============================
- * WHAT: Added Prisma Client for PostgreSQL database operations
- * WHY: Phase 3 requirement to replace in-memory storage with persistent database
- * IMPACT: All user/tenant operations now use database instead of Map objects
- * NOTES FOR CHATGPT: This replaces the in-memory Maps (users, tenants, usersByEmail)
- * REPLACES: 
- *   - const users = new Map<string, User>();
- *   - const tenants = new Map<string, Tenant>();
- *   - const usersByEmail = new Map<string, User>();
- * 
- * NOTES FOR CHATGPT:
- * - Prisma Client is the database ORM we use for PostgreSQL
- * - Schema defined in prisma/schema.prisma
- * - Connection string in .env file (DATABASE_URL)
- * - Use prisma.$disconnect() for graceful shutdown
- * - Supports transactions with prisma.$transaction()
- * - Auto-generated types based on schema
+ * WHAT: Updated database setup to use mock fallback when Prisma unavailable
+ * WHY: Enable development and testing without database connectivity dependencies
+ * IMPACT: System can run with mock data for UI testing and development
+ * NOTES FOR CHATGPT: Database utility handles Prisma initialization with graceful fallback
  */
 
-const prisma = new PrismaClient();
+// Database client imported from utility with mock fallback
+// This replaces direct PrismaClient instantiation for better error handling
 
 // =============================================================================
 // ENVIRONMENT CONFIGURATION
