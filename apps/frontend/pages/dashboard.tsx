@@ -12,7 +12,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
-import { Course, CourseListResponse } from '../../../packages/types/src/Course';
+import { Course, CourseListResponse } from '@rustici-killer/types';
 
 /**
  * Renders the dashboard page for managing SCORM courses, handling authentication, and displaying course data.

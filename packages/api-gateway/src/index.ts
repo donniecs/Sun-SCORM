@@ -81,7 +81,7 @@ import {
   LoginRequest, 
   RegisterRequest, 
   AuthResponse
-} from '../../types/src/index';
+} from '@rustici-killer/types';
 import { createDispatchZip } from './utils/createDispatchZip';
 // PHASE 1.5 CLEANUP: Import centralized error handling
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler';
@@ -1525,17 +1525,17 @@ app.get('/org/xapi-summary', requireAuth, requireAdmin, async (req: express.Requ
     
     // Aggregate statistics
     const totalStatements = statements.length;
-    const uniqueUsers = new Set(statements.map(s => s.userId)).size;
-    const uniqueCourses = new Set(statements.map(s => s.courseId)).size;
+    const uniqueUsers = new Set(statements.map((s: any) => s.userId)).size;
+    const uniqueCourses = new Set(statements.map((s: any) => s.courseId)).size;
     
     // Group by verb
-    const verbStats = statements.reduce((acc: any, stmt) => {
+    const verbStats = statements.reduce((acc: any, stmt: any) => {
       acc[stmt.verb] = (acc[stmt.verb] || 0) + 1;
       return acc;
     }, {});
     
     // Group by user
-    const userStats = statements.reduce((acc: any, stmt) => {
+    const userStats = statements.reduce((acc: any, stmt: any) => {
       if (stmt.user) {
         const userId = stmt.user.id;
         if (!acc[userId]) {
@@ -1556,7 +1556,7 @@ app.get('/org/xapi-summary', requireAuth, requireAdmin, async (req: express.Requ
     }, {});
     
     // Group by course
-    const courseStats = statements.reduce((acc: any, stmt) => {
+    const courseStats = statements.reduce((acc: any, stmt: any) => {
       if (stmt.course) {
         const courseId = stmt.course.id;
         if (!acc[courseId]) {
@@ -2005,12 +2005,12 @@ app.get('/dispatch', requireAuth, requireAdmin, async (req: express.Request, res
     });
 
     // Calculate usage statistics for each dispatch
-    const dispatchesWithStats = dispatches.map(dispatch => ({
+    const dispatchesWithStats = dispatches.map((dispatch: any) => ({
       ...dispatch,
       stats: {
         totalUsers: dispatch.users.length,
-        launchedUsers: dispatch.users.filter(u => u.launchedAt).length,
-        completedUsers: dispatch.users.filter(u => u.completedAt).length,
+        launchedUsers: dispatch.users.filter((u: any) => u.launchedAt).length,
+        completedUsers: dispatch.users.filter((u: any) => u.completedAt).length,
         remainingUsers: dispatch.maxUsers ? dispatch.maxUsers - dispatch.users.length : null,
         isExpired: dispatch.expiresAt ? new Date() > dispatch.expiresAt : false,
         isAtCapacity: dispatch.maxUsers ? dispatch.users.length >= dispatch.maxUsers : false
@@ -2088,13 +2088,13 @@ app.get('/dispatch/:id', requireAuth, requireAdmin, async (req: express.Request,
     // Calculate statistics
     const stats = {
       totalUsers: dispatch.users.length,
-      launchedUsers: dispatch.users.filter(u => u.launchedAt).length,
-      completedUsers: dispatch.users.filter(u => u.completedAt).length,
+      launchedUsers: dispatch.users.filter((u: any) => u.launchedAt).length,
+      completedUsers: dispatch.users.filter((u: any) => u.completedAt).length,
       remainingUsers: dispatch.maxUsers ? dispatch.maxUsers - dispatch.users.length : null,
       isExpired: dispatch.expiresAt ? new Date() > dispatch.expiresAt : false,
       isAtCapacity: dispatch.maxUsers ? dispatch.users.length >= dispatch.maxUsers : false,
-      completionRate: dispatch.users.filter(u => u.launchedAt).length > 0 
-        ? (dispatch.users.filter(u => u.completedAt).length / dispatch.users.filter(u => u.launchedAt).length) * 100 
+      completionRate: dispatch.users.filter((u: any) => u.launchedAt).length > 0 
+        ? (dispatch.users.filter((u: any) => u.completedAt).length / dispatch.users.filter((u: any) => u.launchedAt).length) * 100 
         : 0
     };
 
@@ -2611,7 +2611,7 @@ app.get('/org/tenants', requireAuth, requireAdmin, async (req: express.Request, 
     });
 
     // Calculate stats for each tenant
-    const tenantsWithStats = await Promise.all(tenants.map(async (tenant) => {
+    const tenantsWithStats = await Promise.all(tenants.map(async (tenant: any) => {
       const [courseCount, activeDispatches] = await Promise.all([
         prisma.course.count({ where: { owner: { tenantId: tenant.id } } }),
         prisma.dispatch.count({ where: { tenantId: tenant.id } })
@@ -2625,7 +2625,7 @@ app.get('/org/tenants', requireAuth, requireAdmin, async (req: express.Request, 
         updatedAt: tenant.updatedAt,
         stats: {
           totalUsers: tenant.users.length,
-          activeUsers: tenant.users.filter(u => u.isActive).length,
+          activeUsers: tenant.users.filter((u: any) => u.isActive).length,
           totalCourses: courseCount,
           totalDispatches: activeDispatches
         },

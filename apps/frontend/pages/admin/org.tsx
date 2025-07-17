@@ -128,6 +128,7 @@ const AdminOrganizationDashboard: NextPage = () => {
 
   // Data state
   const [tenantMeta, setTenantMeta] = useState<TenantMeta | null>(null);
+  const [tenants, setTenants] = useState<any[]>([]);
   const [users, setUsers] = useState<OrgUser[]>([]);
   const [courses, setCourses] = useState<OrgCourse[]>([]);
   const [xapiStats, setXapiStats] = useState<XAPIStats | null>(null);
@@ -351,6 +352,28 @@ const AdminOrganizationDashboard: NextPage = () => {
       </div>
     );
   }
+
+  // PHASE 15: Tenant Management Functions - Stub implementations
+  const handleCreateTenant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implement tenant creation
+    console.log('Create tenant:', createTenantForm);
+    setShowCreateTenantModal(false);
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implement user creation
+    console.log('Create user:', createUserForm);
+    setShowCreateUserModal(false);
+  };
+
+  const handleAssignCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implement course assignment
+    console.log('Assign course:', assignCourseForm);
+    setShowAssignCourseModal(false);
+  };
 
   return (
     <div className={styles.container}>

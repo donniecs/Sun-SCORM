@@ -63,7 +63,7 @@ router.post('/:dispatchId/launch',
     
     try {
       // Use database transaction for atomic operations
-      const result = await prisma.$transaction(async (tx) => {
+      const result = await prisma.$transaction(async (tx: any) => {
         // 1. Fetch dispatch record with related data
         const dispatch = await tx.dispatch.findUnique({
           where: { id: dispatchId },
@@ -106,13 +106,13 @@ router.post('/:dispatchId/launch',
         }
         
         // Check user count limits
-        const launchedUsers = dispatch.users.filter(u => u.launchedAt).length;
+        const launchedUsers = dispatch.users.filter((u: any) => u.launchedAt).length;
         if (dispatch.maxUsers && launchedUsers >= dispatch.maxUsers) {
           throw new Error('LICENSE_USER_LIMIT_EXCEEDED');
         }
         
         // Check completion limits (optional future feature)
-        const completedUsers = dispatch.users.filter(u => u.completedAt).length;
+        const completedUsers = dispatch.users.filter((u: any) => u.completedAt).length;
         if (dispatch.maxUsers && completedUsers >= dispatch.maxUsers) {
           // Note: This is a business logic decision - do we count completions against user limit?
           // For now, we'll just log it but not block
@@ -321,7 +321,7 @@ router.get('/:dispatchId/status',
       // Calculate status
       const now = new Date();
       const isExpired = dispatch.expiresAt && now > dispatch.expiresAt;
-      const launchedUsers = dispatch.users.filter(u => u.launchedAt).length;
+      const launchedUsers = dispatch.users.filter((u: any) => u.launchedAt).length;
       const isAtCapacity = dispatch.maxUsers && launchedUsers >= dispatch.maxUsers;
       
       res.json({
@@ -333,7 +333,7 @@ router.get('/:dispatchId/status',
           usageStats: {
             launchedUsers,
             maxUsers: dispatch.maxUsers,
-            completedUsers: dispatch.users.filter(u => u.completedAt).length
+            completedUsers: dispatch.users.filter((u: any) => u.completedAt).length
           }
         },
         course: dispatch.course
