@@ -14,6 +14,17 @@ import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 import { Course, CourseListResponse } from '../../../packages/types/src/Course';
 
+/**
+ * Renders the dashboard page for managing SCORM courses, handling authentication, and displaying course data.
+ * @example
+ * DashboardPage()
+ * // Returns the dashboard page with user's courses
+ * @description
+ *   - Redirects to login page if the user is not authenticated.
+ *   - Displays loading indicators while fetching courses and user data.
+ *   - Error handling is in place to manage failed fetch operations.
+ *   - Provides interaction for navigating to individual course pages and uploading new courses.
+ */
 const Dashboard: React.FC = () => {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -35,6 +46,18 @@ const Dashboard: React.FC = () => {
     }
   }, [user]);
 
+  /**
+   * Fetches a list of courses from the server and updates the local state.
+   * @example
+   * sync()
+   * Updates the course list in the dashboard.
+   * @param {void} - No arguments are required.
+   * @returns {Promise<void>} Resolves when course list fetch is complete and updates are made.
+   * @description
+   *   - Utilizes an authorization token from local storage to authenticate the request.
+   *   - Sets a loading state during the fetch operation to indicate progress.
+   *   - Handles errors by updating the error state and logging to the console.
+   */
   const fetchCourses = async () => {
     try {
       setCoursesLoading(true);

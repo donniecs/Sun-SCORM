@@ -287,6 +287,19 @@ export default class SCORMToXAPIWrapperImpl implements SCORMToXAPIWrapper {
     return this.data[element] || "";
   }
 
+  /**
+   * Attempts to commit progress for the given activity.
+   * @example
+   * MSCommit("Lesson 1")
+   * true
+   * @param {string} param - The parameter to specify the activity for which progress is being committed.
+   * @returns {string} Returns "true" if the commit is successful, otherwise returns "false".
+   * @description
+   *   - The function ensures that the system is initialized before proceeding, otherwise it returns "false".
+   *   - Sends an xAPI "progressed" statement indicating progress on the specified activity.
+   *   - The errorCode is updated to "101" upon failure and "0" upon success.
+   *   - The activityId used in the xAPI statement is retrieved from the configuration.
+   */
   LMSCommit(param: string): string {
     if (!this.initialized) {
       this.errorCode = "101";
@@ -308,6 +321,19 @@ export default class SCORMToXAPIWrapperImpl implements SCORMToXAPIWrapper {
     return "true";
   }
 
+  /**
+   * Terminates the current session if initialized and sends a termination statement.
+   * @example
+   * MSFinish("end_session")
+   * "true"
+   * @param {string} param - A string to indicate the termination process.
+   * @returns {string} Returns "true" if the session is terminated successfully, otherwise "false".
+   * @description
+   *   - Checks if the session is initialized before proceeding with termination.
+   *   - Updates the errorCode to "101" if initialization is not complete.
+   *   - Sends an xAPI statement with a termination verb when initialized.
+   *   - Resets the errorCode to "0" upon successful termination.
+   */
   LMSFinish(param: string): string {
     if (!this.initialized) {
       this.errorCode = "101";
@@ -333,6 +359,17 @@ export default class SCORMToXAPIWrapperImpl implements SCORMToXAPIWrapper {
     return this.errorCode;
   }
 
+  /**
+   * Returns a human-readable error message corresponding to a given error code.
+   * @example
+   * MSGetErrorString("101")
+   * "General initialization failure"
+   * @param {string} errorCode - The error code string whose associated message is to be retrieved.
+   * @returns {string} The error message associated with the provided error code, or "Unknown error" if the code is not recognized.
+   * @description
+   *   - The function maps specific error codes to their respective descriptions using an internal object.
+   *   - If the errorCode is not present in the predefined list, it defaults to returning "Unknown error".
+   */
   LMSGetErrorString(errorCode: string): string {
     const errorMessages: { [key: string]: string } = {
       "0": "No error",

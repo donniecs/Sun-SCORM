@@ -4,6 +4,18 @@ import Head from 'next/head';
 import Link from 'next/link';
 import styles from '../../styles/Docs.module.css';
 
+/**
+ * Renders the Rustici Killer SCORM platform documentation page.
+ * @example
+ * DocumentationPage()
+ * // Returns a complete page structure for Rustici Killer documentation.
+ * @returns {JSX.Element} Documentation layout with navigation and content sections.
+ * @description
+ *   - Utilizes Next.js components such as Head for page metadata.
+ *   - Includes semantic HTML structure, enhancing accessibility and SEO.
+ *   - Incorporates styling through imported CSS modules.
+ *   - Features interactive elements like section quick navigation and API endpoint presentation.
+ */
 const DocsPage: NextPage = () => {
   return (
     <div className={styles.container}>

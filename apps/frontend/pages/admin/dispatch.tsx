@@ -88,6 +88,18 @@ const AdminDispatchPage: React.FC = () => {
     fetchData();
   }, []);
 
+  /**
+   * Syncs dispatches, courses, and tenants data with the frontend application.
+   * @example
+   * sync()
+   * undefined
+   * @returns {undefined} No return value, function performs side effects.
+   * @description
+   *   - Ensures the user is authenticated by checking for a valid token in local storage.
+   *   - Navigates to the login page if the token is missing, preventing further function execution.
+   *   - Sets loading state to true at the start and false at the end to manage UI state.
+   *   - Handles errors by setting an error message state when fetch operations fail.
+   */
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -142,6 +154,19 @@ const AdminDispatchPage: React.FC = () => {
     }
   };
 
+  /**
+   * Handles form submission for creating dispatch and updates state accordingly
+   * @example
+   * sync(event)
+   * No return value is expected; updates the state and handles errors internally.
+   * @param {React.FormEvent} e - Event object from the form submission.
+   * @returns {void} No value is returned from this function.
+   * @description
+   *   - Prevents the default form submission behavior to handle logic in the function.
+   *   - Retrieves the authentication token from local storage to authorize API requests.
+   *   - Resets the form state upon successful dispatch creation.
+   *   - If an error occurs during the API call, sets an error message to be displayed.
+   */
   const handleCreateDispatch = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -179,6 +204,19 @@ const AdminDispatchPage: React.FC = () => {
     }
   };
 
+  /**
+  * Initiates a dispatch launch process by creating a launch token and alerts the launch URL.
+  * @example
+  * sync('12345-abcde')
+  * Launch URL created: http://example.com/launch/abcde
+  * @param {string} dispatchId - The unique identifier for the dispatch.
+  * @returns {void} No return value.
+  * @description
+  *   - Checks for a token in localStorage to authorize the request.
+  *   - Sends a POST request to the server with the dispatch ID and user email.
+  *   - Alerts the user with the launch URL upon successful token creation.
+  *   - Resets the email input field and fetches updated data on success.
+  */
   const handleCreateLaunchToken = async (dispatchId: string) => {
     try {
       const token = localStorage.getItem('token');
@@ -208,6 +246,18 @@ const AdminDispatchPage: React.FC = () => {
     }
   };
 
+  /**
+   * Deletes a dispatch from the server after user confirmation
+   * @example
+   * sync('12345')
+   * undefined
+   * @param {string} dispatchId - The ID of the dispatch to be deleted.
+   * @returns {void} No return value.
+   * @description
+   *   - Utilizes token stored in localStorage to authorize the delete action.
+   *   - Handles errors by setting an error message when dispatch deletion fails.
+   *   - Invokes fetchData() to refresh or update data after successful deletion.
+   */
   const handleDeleteDispatch = async (dispatchId: string) => {
     if (!confirm('Are you sure you want to delete this dispatch?')) return;
 
@@ -243,6 +293,18 @@ const AdminDispatchPage: React.FC = () => {
     return 'Active';
   };
 
+  /**
+   * Determines the appropriate color code based on dispatch conditions.
+   * @example
+   * dispatchColorCode(dispatch);
+   * // Returns a color code like '#dc3545' (Red), '#ffc107' (Yellow), or '#28a745' (Green) based on dispatch properties.
+   * @param {Dispatch} dispatch - Dispatch object containing stats and constraints.
+   * @returns {string} Hex color code representing the status of the dispatch.
+   * @description
+   *   - Returns red if dispatch is expired or at capacity.
+   *   - Returns yellow if user usage is at or above 80% and when expiration is within 7 days.
+   *   - Defaults to green when none of the conditions for red or yellow are met.
+   */
   const getStatusColor = (dispatch: Dispatch) => {
     if (dispatch.stats.isExpired) return '#dc3545'; // Red
     if (dispatch.stats.isAtCapacity) return '#dc3545'; // Red
@@ -278,6 +340,20 @@ const AdminDispatchPage: React.FC = () => {
     return formatDate(expiresAt);
   };
 
+  /**
+   * Downloads a dispatch package and triggers the download in the browser.
+   * @example
+   * sync('abc123', 'Course Title')
+   * Alerts 'Dispatch package downloaded successfully!' after download.
+   * @param {string} dispatchId - The unique identifier for the dispatch package.
+   * @param {string} courseTitle - The title of the course used for naming the download file.
+   * @returns {void} No value is returned from this function.
+   * @description
+   *   - Retrieves the user authentication token from local storage.
+   *   - Constructs a filename by formatting courseTitle and dispatchId.
+   *   - Alerts the user when the download is complete and provides instructions.
+   *   - Handles errors by setting an error message state when the download fails.
+   */
   const handleDownloadDispatch = async (dispatchId: string, courseTitle: string) => {
     try {
       const token = localStorage.getItem('token');

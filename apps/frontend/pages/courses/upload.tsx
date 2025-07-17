@@ -14,6 +14,17 @@ import { useAuth } from '../../contexts/AuthContext';
 import Navbar from '../../components/Navbar';
 import { CourseUploadResponse, CourseUploadApiResponse, CreateCourseRequest } from '../../../../packages/types/src/Course';
 
+/**
+ * Handles the course upload process, including file selection, drag-and-drop functionality, and form submission.
+ * @example
+ * CourseUpload(); // Initializes the course upload component
+ * @returns {JSX.Element} A complete React component for uploading courses.
+ * @description
+ *   - Redirects to the login page if the user is not authenticated.
+ *   - Only accepts ZIP files for upload.
+ *   - Uses asynchronous requests to handle server interactions for course data processing.
+ *   - Displays feedback messages for upload success, failure, and validation errors.
+ */
 export default function CourseUpload() {
   const { user } = useAuth();
   const router = useRouter();
@@ -64,6 +75,19 @@ export default function CourseUpload() {
     }
   };
 
+  /**
+  * Uploads a file to the server and persists course data to the database.
+  * @example
+  * sync()
+  * Uploads the selected file and redirects to the dashboard on success.
+  * @param {File} selectedFile - The file to be uploaded. Must be a valid File object.
+  * @returns {void} No return value.
+  * @description
+  *   - Ensures the upload status and errors are properly managed through state settings.
+  *   - Uses FormData to handle file upload and automatically manages headers.
+  *   - Throws an error if the course data persistence fails, alerting via error state update.
+  *   - Handles both successful and failed upload attempts with appropriate user feedback.
+  */
   const handleUpload = async () => {
     if (!selectedFile) return;
 

@@ -303,6 +303,20 @@ class StatementForwarder {
 const statementForwarder = new StatementForwarder();
 
 // Middleware: Rate limiting
+/**
+ * Middleware to apply rate limiting to incoming requests based on IP address.
+ * @example
+ * sync(req, res, next)
+ * No return value, proceeds with the next middleware or sends a 429 error response if rate limit is exceeded.
+ * @param {express.Request} req - Express request object containing details of the incoming request.
+ * @param {express.Response} res - Express response object used to send responses back to the client.
+ * @param {express.NextFunction} next - Express next function to proceed to the next middleware.
+ * @returns {void} No return value, used as a middleware function.
+ * @description
+ *   - Utilizes `rateLimiter` to track request consumption based on IP.
+ *   - Sends a JSON response with status 429 if the rate limit is exceeded.
+ *   - Logs a warning with the IP address and remaining points when rate limit is exceeded.
+ */
 const rateLimitMiddleware = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   try {
     const key = req.ip || 'unknown';
@@ -318,6 +332,21 @@ const rateLimitMiddleware = async (req: express.Request, res: express.Response, 
 };
 
 // Middleware: Tenant validation
+/**
+* Middleware function to validate tenant and dispatch credentials from request headers.
+* @example
+* sync(req, res, next)
+* // If valid headers are present, calls next(), otherwise responds with error status.
+* @param {express.Request} req - The request object containing headers for validation.
+* @param {express.Response} res - The response object used for sending error messages.
+* @param {express.NextFunction} next - The next middleware function in the stack to be called if validation passes.
+* @returns {void} No return value. It directly modifies the request object or sends a response.
+* @description
+*   - Checks for the presence of 'x-tenant-id' and 'x-dispatch-id' headers.
+*   - Verifies tenant and dispatch validity using a database query.
+*   - Adds tenantId and dispatchId to the request object if validation is successful.
+*   - Logs errors and handles different error states by sending appropriate HTTP response codes and messages.
+*/
 const tenantValidationMiddleware = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   try {
     const tenantId = req.headers['x-tenant-id'] as string;
