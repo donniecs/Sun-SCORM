@@ -69,6 +69,18 @@ const CourseViewer: React.FC = () => {
     }
   }, [id]);
 
+  /**
+   * Fetches the course details for a given course ID.
+   * @example
+   * sync("12345")
+   * // Retrieves details for course with ID "12345"
+   * @param {string} courseId - The ID of the course to fetch.
+   * @returns {void} No return value.
+   * @description
+   *   - Sets the loading state to true at the start and false when completed.
+   *   - Handles errors for course not found (404) and access denied (403).
+   *   - Logs an error message to the console if fetching fails.
+   */
   const fetchCourse = async (courseId: string) => {
     try {
       setCourseLoading(true);
@@ -105,6 +117,17 @@ const CourseViewer: React.FC = () => {
     }
   };
 
+  /**
+  * Fetches and sets registration data for a specific course by course ID.
+  * @example
+  * sync('course123')
+  * // Sets registrations state with fetched data for course 'course123'
+  * @param {string} courseId - The ID of the course for which registrations are being fetched.
+  * @returns {void} The function does not return a value; it updates the state instead.
+  * @description
+  *   - Sets registrations loading state during the fetch process.
+  *   - Handles exceptions by logging errors without affecting the state.
+  */
   const fetchRegistrations = async (courseId: string) => {
     try {
       setRegistrationsLoading(true);
@@ -133,6 +156,19 @@ const CourseViewer: React.FC = () => {
     router.push('/dashboard');
   };
 
+  /**
+  * Launch the course and handle the sequencing session.
+  * @example
+  * sync(courseId)
+  * Opens the course in a new tab and refreshes registrations.
+  * @param {string} id - The course identifier for launching.
+  * @returns {Promise<void>} Resolves after course launch or throws an error.
+  * @description
+  *   - Sends a POST request to launch the course and create a sequencing session.
+  *   - Opens the course runtime in a new browser tab.
+  *   - Sends xAPI statements for course activity tracking.
+  *   - Handles error setting and console logging on launch failure.
+  */
   const handleLaunchCourse = async () => {
     try {
       setError(null);

@@ -4,6 +4,18 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useAuth } from '../contexts/AuthContext';
 
+/**
+* Manages the login functionality in the Rustici Killer application interface.
+* @example
+* handleSubmit(event)
+* undefined
+* @param {React.FormEvent} e - The event triggered upon form submission.
+* @returns {JSX.Element} The login component JSX rendering.
+* @description
+*   - Redirects to the dashboard if the user is already logged in.
+*   - Sets loading state during the login process.
+*   - Displays error messages on login failure.
+*/
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,6 +31,20 @@ const Login: React.FC = () => {
     }
   }, [user, router]);
 
+  /**
+   * Handles the login operation by preventing the default form submission,
+   * attempts login, and manages loading and error states.
+   * @example
+   * sync(event)
+   * // where event is the form submission event
+   * @param {React.FormEvent} e - The event triggered by form submission.
+   * @returns {void} This function does not return any value.
+   * @description
+   *   - Resets the error state before attempting login.
+   *   - Sets loading to true at the start of the process and back to false at the end.
+   *   - Gracefully handles login errors by updating the error state.
+   *   - Uses try-catch-finally block to ensure loading state is reset correctly.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');

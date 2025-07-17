@@ -4,6 +4,19 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useAuth } from '../contexts/AuthContext';
 
+/**
+ * Handles user registration and redirects logged-in users to the dashboard.
+ * @example
+ * handleSubmit(event)
+ * // Begins registration process and manages loading/error state
+ * @param {React.FormEvent} e - The event object representing form submission.
+ * @returns {JSX.Element} Registration form component.
+ * @description
+ *   - Utilizes the useAuth hook to perform registration actions.
+ *   - Manages internal state for input fields and loading/error feedback.
+ *   - Influences routing based on user authentication status through useRouter.
+ *   - Displays visual feedback within the form during registration.
+ */
 const Register: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,6 +33,19 @@ const Register: React.FC = () => {
     }
   }, [user, router]);
 
+  /**
+   * Handles form submission for user registration.
+   * @example
+   * sync(event)
+   * No return value
+   * @param {React.FormEvent} e - The form event object triggered by the form submission.
+   * @returns {void} No return value.
+   * @description
+   *   - Prevents the default form submission behavior.
+   *   - Clears any existing error messages and sets a loading state.
+   *   - Attempts to register the user with the provided information.
+   *   - Sets an error message if registration fails, and resets loading state.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
