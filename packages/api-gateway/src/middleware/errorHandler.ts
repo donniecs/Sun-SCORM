@@ -7,7 +7,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { Prisma } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 // Custom error types
 export class APIError extends Error {
@@ -75,7 +75,7 @@ export const globalErrorHandler = (
   }
 
   // Handle Prisma errors
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+  if (error instanceof PrismaClientKnownRequestError) {
     const prismaError = handlePrismaError(error);
     const errorResponse: ErrorResponse = {
       success: false,
@@ -168,7 +168,7 @@ export const globalErrorHandler = (
 /**
  * Convert Prisma errors to structured error responses
  */
-function handlePrismaError(error: Prisma.PrismaClientKnownRequestError): {
+function handlePrismaError(error: PrismaClientKnownRequestError): {
   statusCode: number;
   code: string;
   message: string;

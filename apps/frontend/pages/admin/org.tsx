@@ -128,6 +128,7 @@ const AdminOrganizationDashboard: NextPage = () => {
 
   // Data state
   const [tenantMeta, setTenantMeta] = useState<TenantMeta | null>(null);
+  const [tenants, setTenants] = useState<any[]>([]);
   const [users, setUsers] = useState<OrgUser[]>([]);
   const [courses, setCourses] = useState<OrgCourse[]>([]);
   const [xapiStats, setXapiStats] = useState<XAPIStats | null>(null);
@@ -310,6 +311,81 @@ const AdminOrganizationDashboard: NextPage = () => {
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to deactivate user');
+    }
+  };
+
+  const handleCreateTenant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/org/tenants', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(createTenantForm)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create tenant');
+      }
+
+      setShowCreateTenantModal(false);
+      setCreateTenantForm({ name: '', domain: '' });
+      loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create tenant');
+    }
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/org/users', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(createUserForm)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create user');
+      }
+
+      setShowCreateUserModal(false);
+      setCreateUserForm({ email: '', firstName: '', lastName: '', password: '', role: 'learner' });
+      loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create user');
+    }
+  };
+
+  const handleAssignCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/org/assign-course', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(assignCourseForm)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to assign course');
+      }
+
+      setShowAssignCourseModal(false);
+      setAssignCourseForm({ courseId: '' });
+      loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to assign course');
     }
   };
 

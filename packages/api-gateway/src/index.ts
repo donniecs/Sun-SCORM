@@ -81,7 +81,7 @@ import {
   LoginRequest, 
   RegisterRequest, 
   AuthResponse
-} from '../../types/src/index';
+} from '@rustici-killer/types';
 import { createDispatchZip } from './utils/createDispatchZip';
 // PHASE 1.5 CLEANUP: Import centralized error handling
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler';
