@@ -90,7 +90,7 @@ import launchRoutes from './routes/launch';
 import downloadRoutes from './routes/download';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // =============================================================================
 // PRISMA CLIENT SETUP - PHASE 3: Database Integration

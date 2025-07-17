@@ -42,7 +42,7 @@ const io = new SocketIOServer(server, {
 });
 const prisma = new PrismaClient();
 
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 3000;
 
 // =============================================================================
 // MIDDLEWARE SETUP
