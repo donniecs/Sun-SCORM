@@ -726,7 +726,7 @@ app.post('/courses/:id/launch', requireAuth, async (req: express.Request, res: e
     });
 
     // Generate launch URL pointing to scorm-runtime service
-    const launchUrl = `${process.env.SCORM_RUNTIME_URL || 'http://localhost:3001'}/runtime/${registration.id}`;
+    const launchUrl = `${process.env.SCORM_RUNTIME_URL || 'http://localhost:3000'}/runtime/${registration.id}`;
 
     console.log('LAUNCH: Created registration', registration.id, 'for course', course.title, 'user', user.email);
     
@@ -892,11 +892,11 @@ app.get('/api/v1', (req: express.Request, res: express.Response) => {
         me: 'GET /auth/me'
       },
       services: {
-        scormRuntime: 'http://localhost:3001',
+        scormRuntime: 'http://localhost:3000',
         contentIngestion: 'http://localhost:3002',
-        lrsService: 'http://localhost:3003',
+        lrsService: 'http://localhost:3005',
         sequencingEngine: 'http://localhost:3004',
-        webhookEmitter: 'http://localhost:3005'
+        webhookEmitter: 'http://localhost:3007'
       }
     }
   });
@@ -934,7 +934,7 @@ app.use('/api/content', requireAuth, createProxyMiddleware({
 
 // SCORM Runtime Service
 app.use('/api/scorm', requireAuth, createProxyMiddleware({
-  target: process.env.SCORM_RUNTIME_URL || 'http://localhost:3001',
+  target: process.env.SCORM_RUNTIME_URL || 'http://localhost:3000',
   changeOrigin: true,
   pathRewrite: {
     '^/api/scorm': ''
@@ -943,7 +943,7 @@ app.use('/api/scorm', requireAuth, createProxyMiddleware({
 
 // LRS Service
 app.use('/api/lrs', requireAuth, createProxyMiddleware({
-  target: process.env.LRS_SERVICE_URL || 'http://localhost:3003',
+  target: process.env.LRS_SERVICE_URL || 'http://localhost:3005',
   changeOrigin: true,
   pathRewrite: {
     '^/api/lrs': ''
@@ -961,7 +961,7 @@ app.use('/api/sequencing', requireAuth, createProxyMiddleware({
 
 // Webhook Emitter Service
 app.use('/api/webhooks', requireAuth, createProxyMiddleware({
-  target: process.env.WEBHOOK_EMITTER_URL || 'http://localhost:3005',
+  target: process.env.WEBHOOK_EMITTER_URL || 'http://localhost:3007',
   changeOrigin: true,
   pathRewrite: {
     '^/api/webhooks': ''
