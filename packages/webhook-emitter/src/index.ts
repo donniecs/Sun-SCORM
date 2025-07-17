@@ -32,7 +32,7 @@ import { v4 as uuidv4 } from 'uuid';
 // } from '@rustici-killer/types';
 
 const app = express();
-const PORT = process.env.PORT || 3005;
+const PORT = process.env.PORT || 3007;
 
 // =============================================================================
 // MIDDLEWARE SETUP

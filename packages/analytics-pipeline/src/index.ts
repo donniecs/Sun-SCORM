@@ -69,7 +69,7 @@ const rateLimiter = new RateLimiterMemory({
 
 // Express app
 const app = express();
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 3006;
 
 // Middleware
 app.use(helmet());
