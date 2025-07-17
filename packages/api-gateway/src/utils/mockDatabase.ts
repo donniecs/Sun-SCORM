@@ -55,7 +55,7 @@ const mockUsers: MockUser[] = [
     email: 'admin@example.com',
     firstName: 'Admin',
     lastName: 'User',
-    password: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/lewsJCOUQTqHT0bZG', // adminpass123
+    password: '$2b$12$sJlOzvvJvBBxmtV1dzldS.OJ8F6AI4x7dWgyD4Kk2I7mAUdmM.c6W', // adminpass123
     tenantId: '1',
     role: 'admin',
     isActive: true,
@@ -93,14 +93,23 @@ const mockDispatches: MockDispatch[] = [];
 // Mock Prisma client interface
 export const mockPrisma = {
   user: {
-    findUnique: async ({ where }: { where: any }) => {
+    findUnique: async ({ where, include }: { where: any; include?: any }) => {
+      let user: MockUser | undefined;
       if (where.email) {
-        return mockUsers.find(u => u.email === where.email) || null;
+        user = mockUsers.find(u => u.email === where.email);
+      } else if (where.id) {
+        user = mockUsers.find(u => u.id === where.id);
       }
-      if (where.id) {
-        return mockUsers.find(u => u.id === where.id) || null;
+      
+      if (!user) return null;
+      
+      // Add tenant if included
+      const result: any = { ...user };
+      if (include?.tenant) {
+        result.tenant = mockTenants.find(t => t.id === user.tenantId);
       }
-      return null;
+      
+      return result;
     },
     create: async ({ data }: { data: any }) => {
       const newUser: MockUser = {
