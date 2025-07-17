@@ -12,7 +12,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useAuth } from '../../contexts/AuthContext';
 import Navbar from '../../components/Navbar';
-import { Course, CourseResponse } from '../../../../packages/types/src/Course';
+import { Course, CourseResponse } from '@rustici-killer/types';
 
 interface Registration {
   sessionId: string;

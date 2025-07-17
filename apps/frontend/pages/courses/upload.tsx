@@ -12,7 +12,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../contexts/AuthContext';
 import Navbar from '../../components/Navbar';
-import { CourseUploadResponse, CourseUploadApiResponse, CreateCourseRequest } from '../../../../packages/types/src/Course';
+import { CourseUploadResponse, CourseUploadApiResponse, CreateCourseRequest } from '@rustici-killer/types';
 
 /**
  * Handles the course upload process, including file selection, drag-and-drop functionality, and form submission.

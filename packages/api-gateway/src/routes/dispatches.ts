@@ -105,9 +105,9 @@ router.get('/',
       });
 
       // Calculate statistics for each dispatch
-      const dispatchesWithStats = dispatches.map(dispatch => {
-        const launchedUsers = dispatch.users.filter(u => u.launchedAt).length;
-        const completedUsers = dispatch.users.filter(u => u.completedAt).length;
+      const dispatchesWithStats = dispatches.map((dispatch: any) => {
+        const launchedUsers = dispatch.users.filter((u: any) => u.launchedAt).length;
+        const completedUsers = dispatch.users.filter((u: any) => u.completedAt).length;
         const totalUsers = dispatch.users.length;
         
         // Calculate usage rate

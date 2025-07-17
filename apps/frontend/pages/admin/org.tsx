@@ -428,6 +428,28 @@ const AdminOrganizationDashboard: NextPage = () => {
     );
   }
 
+  // PHASE 15: Tenant Management Functions - Stub implementations
+  const handleCreateTenant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implement tenant creation
+    console.log('Create tenant:', createTenantForm);
+    setShowCreateTenantModal(false);
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implement user creation
+    console.log('Create user:', createUserForm);
+    setShowCreateUserModal(false);
+  };
+
+  const handleAssignCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implement course assignment
+    console.log('Assign course:', assignCourseForm);
+    setShowAssignCourseModal(false);
+  };
+
   return (
     <div className={styles.container}>
       <Head>

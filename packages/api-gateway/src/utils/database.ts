@@ -198,8 +198,8 @@ export class TenantService {
     // Calculate statistics
     const stats = {
       totalUsers: tenant.users.length,
-      activeUsers: tenant.users.filter(u => u.isActive).length, // Use isActive field instead of lastLoginAt
-      totalCourses: new Set(tenant.dispatches.map(d => d.courseId)).size,
+      activeUsers: tenant.users.filter((u: any) => u.isActive).length, // Use isActive field instead of lastLoginAt
+      totalCourses: new Set(tenant.dispatches.map((d: any) => d.courseId)).size,
       totalDispatches: tenant.dispatches.length
     };
 
